@@ -1,0 +1,11 @@
+# Private config
+config/private*
+
+# Python bytecode files
+**/__pycache__
+
+# Archived files
+archives/*
+
+# env
+kafka-env/*
