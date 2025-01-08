@@ -26,7 +26,7 @@ Else, you can also start Zookeeper and Kafka by running
 
 After starting Zookeeper and Kafka, you can start running our streamlit app by running
 ```bash
-   streamlit run .\app\Home.py
+   python -m streamlit run .\app\Home.py
 ```
 
 Note: Windows users might need to set the Python Path
