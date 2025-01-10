@@ -23,8 +23,11 @@ def get_current_weather(location):
     """Fetch current weather for a given location."""
     params = {'q': location}
     data = get_weather_data('current', params)
+    data_weather = data.get('current')
+    lat, lon = data.get('location')['lat'], data.get('location')['lon']
+    data_weather['lat'], data_weather['lon'] = lat, lon
     if data:
-        return data.get('current')
+        return data_weather
     return None
 
 
@@ -48,6 +51,9 @@ def get_historical_weather(location, date, hour=None):
         params['hour'] = hour
     
     data = get_weather_data('history', params)
+    data_weather = data.get('forecast')
+    lat, lon = data.get('location')['lat'], data.get('location')['lon']
+    data_weather['lat'], data_weather['lon'] = lat, lon
     if data:
-        return data.get('forecast')
+        return data_weather
     return None
