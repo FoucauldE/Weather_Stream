@@ -1,28 +1,9 @@
 from datetime import datetime, timedelta
 from helper.weather_api import get_historical_weather
+from config.config import VARIABLES_TO_KEEP, TARGET_VARIABLE
 
 ## Paramters
 data_path = "Data/"
-X_features = ["temp_c",
-              "is_day",
-              "wind_kph",
-              "wind_degree", #(wind_cos() et wind_sin())
-              "wind_dir",  # (à encoder ou voir si wind_degree)
-              "pressure_mb",
-              "humidity",
-              "humidity",
-              "cloud",
-              "feelslike_c",
-              "windchill_c",
-              "heatindex_c",
-              "dewpoint_c",
-              "vis_km",
-              "gust_kph",
-              "uv",
-              "lat",
-              "lon"
-]
-Y_target = "precip_mm"
 
 ## Time limits of the collection
 current_date = datetime.now()
