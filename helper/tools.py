@@ -40,7 +40,12 @@ def preprocess_data(data):
     return last_updated, filtered_data, target
 
 def preprocess_historical_data(data):
-    "This function "
+    """
+    Preprocessed the data do get the same format that the previous function
+    output. It is dedicated to treat the historical data format provided by the
+    function get_historical_weather from helper.weather_api.
+
+    """
     processed_data = {}
     
     # Extract latitude, longitude and city name
