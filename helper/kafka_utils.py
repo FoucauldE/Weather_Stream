@@ -11,6 +11,7 @@ def create_kafka_producer():
 
 def send_message_to_kafka(producer, output_topic, message):
     producer.send(output_topic, message)
+    print("message sent", message)
     producer.flush()
 
 def create_kafka_consumer(input_topic):
