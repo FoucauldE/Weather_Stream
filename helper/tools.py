@@ -20,21 +20,21 @@ def preprocess_data(data):
     transforms 'wind_degree' into its sine and cosine components and extracts the target variable.
     Also returns the last update epoch (used to identify if new data arrived)
     """
+    
+    nested_data = data.get('data', {})
 
     filtered_data = {}
     for key in VARIABLES_TO_KEEP:
-        if key in data:
-            filtered_data[key] = data[key]
+        if key in nested_data:
+            filtered_data[key] = nested_data[key]
     
     if 'wind_degree' in filtered_data:
-        wind_degree = filtered_data.pop('wind_degree')  # Remove original key
+        wind_degree = nested_data['wind_degree']
         radians = math.radians(wind_degree)
         filtered_data['wind_degree_sin'] = math.sin(radians)
         filtered_data['wind_degree_cos'] = math.cos(radians)
 
-    if TARGET_VARIABLE in data:
-        target = data[TARGET_VARIABLE]
-
-    last_updated = data['last_updated_epoch']
+    target = nested_data.get(TARGET_VARIABLE, None)
+    last_updated = nested_data.get('last_updated_epoch', None)
 
     return last_updated, filtered_data, target
