@@ -14,7 +14,7 @@ INPUT_TOPIC = 'weather-live-data'
 OUTPUT_TOPIC = 'rain-prediction-output'
 CONSUMER_GROUP = 'rain-prediction-group'
 
-consumer = create_kafka_consumer(INPUT_TOPIC)
+consumer = create_kafka_consumer(INPUT_TOPIC, 'live-weather-consumer-group')
 producer = create_kafka_producer()
 
 sklearn_model = SGDRegressor() # change to load pre-trained model
@@ -33,7 +33,10 @@ def train_and_predict():
     for message in consume_messages_from_kafka(consumer):
         # print(f"Received message: {message}")
         
-        timestamp, features, target = preprocess_data(message)
+        # timestamp, features, target = preprocess_data(message)
+        preprocessed_data = preprocess_data(message)[0]
+        print(preprocessed_data)
+        timestamp, features, target = preprocessed_data.values()
         # print(timestamp)
         # print(features)
         
@@ -45,7 +48,8 @@ def train_and_predict():
             # if timestamp - previous_timestamp == 3600:
             # if timestamp - previous_timestamp == 15*60:
             # if 15*60 - margin_seconds <= time_diff <= 15*60 + margin_seconds:
-            if timestamp - previous_timestamp == 15*60:
+            # if timestamp - previous_timestamp == 15*60:
+            if True:
                 # print('is new')
                 print("Evaluate model and update...")
                 y_pred = model.predict_one(previous_features)
