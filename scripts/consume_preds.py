@@ -2,7 +2,7 @@ from helper.kafka_utils import create_kafka_consumer, consume_messages_from_kafk
 import time
 
 INPUT_TOPIC = 'rain-prediction-output'
-consumer_predictions = create_kafka_consumer(INPUT_TOPIC)
+consumer_predictions = create_kafka_consumer(INPUT_TOPIC, group_id='output-preds-group')
 
 if __name__ == "__main__":
 

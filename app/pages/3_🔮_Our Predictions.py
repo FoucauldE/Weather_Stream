@@ -10,7 +10,7 @@ def start_background_task():
     thread.start()
 
 INPUT_TOPIC = 'rain-prediction-output'
-consumer_predictions = create_kafka_consumer(INPUT_TOPIC)
+consumer_predictions = create_kafka_consumer(INPUT_TOPIC, group_id='output-preds-group')
 
 st.set_page_config(page_title="Predictions", page_icon="🔮")
 st.title('🔮 Predictions')
