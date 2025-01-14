@@ -11,13 +11,15 @@ def create_kafka_producer():
 
 def send_message_to_kafka(producer, output_topic, message):
     producer.send(output_topic, message)
+    #print("message sent", message)
     producer.flush()
 
-def create_kafka_consumer(input_topic):
+def create_kafka_consumer(input_topic, group_id, auto_offset_rest='latest'):
     consumer = KafkaConsumer(
         input_topic,
         bootstrap_servers=KAFKA_BROKER,
-        group_id='weather_group',
+        group_id=group_id,
+        auto_offset_reset=auto_offset_rest,
         value_deserializer=lambda m: json.loads(m.decode('utf-8')),
     )
     return consumer
