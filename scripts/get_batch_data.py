@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from helper.weather_api import get_historical_weather
-from helper.tools import preprocess_historical_data
+from helper.tools import preprocess_data
 from config.config import VARIABLES_TO_KEEP, TARGET_VARIABLE, CITIES_LIST
 import csv
 import os
@@ -33,7 +33,9 @@ def get_data(start_date, end_date, output_csv_path):
     """
     Provide the historical data of the 8 previous days in a csv format.
     """
-    headers = VARIABLES_TO_KEEP + [TARGET_VARIABLE]
+    sample_data = get_historical_weather(location=CITIES_LIST[0], date=start_date)
+    processed_sample = preprocess_data(sample_data)
+    headers = ["last_updated", "precip_mm"] + list(processed_sample[0]["processed_sample"].keys())
     print("headers put")
     with open(output_csv_path, mode="w", newline="", encoding="utf-8") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=headers)
@@ -43,9 +45,15 @@ def get_data(start_date, end_date, output_csv_path):
         while date <= end_date:
             for city in CITIES_LIST:
                 data = get_historical_weather(location=city, date=date, hour=None)
-                processed_data = preprocess_historical_data(data)
-                for hour_data in processed_data.get("hours", []):
-                    writer.writerow(hour_data)
+                processed_data = preprocess_data(data)
+                for i in range(24):
+                    hour_data = processed_data[i]
+                    row = {
+                        "last_updated": hour_data["last_updated"],
+                        "precip_mm": hour_data["target"],
+                        **hour_data["processed_sample"]
+                    }
+                    writer.writerow(row)
 
             date += timedelta(days=1)
     print("Data collected")
@@ -55,14 +63,14 @@ def format_csv(csv_path="Data/all_weather_data.csv", prediction_distance=1):
     Input: csv file
     Output: the same but with the target added at the end of each line
     """
-    # Charger le fichier CSV
+    # Load the csv file
     df = pd.read_csv(csv_path)
 
-    # Ajouter la dernière colonne de la ligne suivante à la ligne actuelle
+    # Add the last column of the next row to the current row
     df['y_target'] = df['precip_mm'].shift(-1)
     df = df.iloc[:-1]
 
-    # Sauvegarder dans un nouveau fichier CSV
+    # Save to a new CSV file
     file_path = csv_path
     base_directory = os.path.dirname(csv_path)
     output_file_path = os.path.join(base_directory, 'all_weather_data_with_Y.csv')
