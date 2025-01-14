@@ -1,16 +1,14 @@
 API_URL = 'http://api.weatherapi.com/v1'
 KAFKA_BROKER = 'localhost:9092'
+DATA_DIR = './data'
+MAX_HISTORY_DAYS = 7
 # ARCHIVE_DIR = './archives'
 # WAIT_TIME = 10
 
-VARIABLES_TO_KEEP = ["lat",
-                    "lon",
-                    "time_epoch",
-                    "temp_c",
+VARIABLES_TO_KEEP = ["temp_c",
                     "is_day",
                     "wind_kph",
-                    "wind_sin",
-                    "wind_cos",
+                    "wind_degree", # later separated into cos and sin
                     "pressure_mb",
                     "humidity",
                     "cloud",
@@ -20,7 +18,9 @@ VARIABLES_TO_KEEP = ["lat",
                     "dewpoint_c",
                     "vis_km",
                     "gust_kph",
-                    "uv"                  
+                    "uv",
+                    "lat",
+                    "lon"
 ]
 
 TARGET_VARIABLE = "precip_mm"

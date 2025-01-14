@@ -9,3 +9,6 @@ archives/*
 
 # env
 kafka-env/*
+
+# test files
+4_Test_preds.py

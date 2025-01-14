@@ -11,8 +11,8 @@ def create_kafka_producer():
 
 def send_message_to_kafka(producer, output_topic, message):
     producer.send(output_topic, message)
-    #print("message sent", message)
-    producer.flush()
+    print("message sent", message)
+    producer.flush() #  ensures all previously sent messages have completed
 
 def create_kafka_consumer(input_topic, group_id, auto_offset_rest='latest'):
     consumer = KafkaConsumer(
