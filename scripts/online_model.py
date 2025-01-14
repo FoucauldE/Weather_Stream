@@ -22,35 +22,27 @@ model = convert_sklearn_to_river(sklearn_model)
 metric = MSE()
 
 
-def train_and_predict():
+def train_and_predict(consumer):
     """
     Consume messages from Kafka, train the model incrementally, and make predictions.
+    Currently adapted to receive live data.
+    Should be modified to receive data from the preceding week in order to perform online learning on this data,
+    before keeping predicting and adjusting on live data.
     """
 
     previous_timestamp, previous_features = None, None
     # margin_seconds = 180 # +/- 3 mins margin
 
     for message in consume_messages_from_kafka(consumer):
-        # print(f"Received message: {message}")
-        
-        # timestamp, features, target = preprocess_data(message)
+
         preprocessed_data = preprocess_data(message)[0]
-        print(preprocessed_data)
         timestamp, features, target = preprocessed_data.values()
-        # print(timestamp)
-        # print(features)
         
         if previous_features is not None:
-            # print('is not 1st')
             time_diff = timestamp - previous_timestamp
             print(time_diff)
             # check if data from an hour later (might need to allow a margin, ie not exactly 3600s)
-            # if timestamp - previous_timestamp == 3600:
-            # if timestamp - previous_timestamp == 15*60:
-            # if 15*60 - margin_seconds <= time_diff <= 15*60 + margin_seconds:
-            # if timestamp - previous_timestamp == 15*60:
-            if True:
-                # print('is new')
+            if timestamp - previous_timestamp == 3600:
                 print("Evaluate model and update...")
                 y_pred = model.predict_one(previous_features)
                 metric.update(target, y_pred)
@@ -64,8 +56,6 @@ def train_and_predict():
                 print(f"Prediction: {y_pred}, Actual: {target}")
                 
         previous_timestamp, previous_features = timestamp, features
-
-        time.sleep(60)
 
 
 if __name__ == "__main__":

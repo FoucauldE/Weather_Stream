@@ -1,5 +1,7 @@
 API_URL = 'http://api.weatherapi.com/v1'
 KAFKA_BROKER = 'localhost:9092'
+DATA_DIR = './data'
+MAX_HISTORY_DAYS = 7
 # ARCHIVE_DIR = './archives'
 # WAIT_TIME = 10
 
