@@ -1,6 +1,7 @@
 import requests
 from config.config import API_URL
 from config.private_config import API_KEY
+from helper.tools import preprocess_data
 
 def get_weather_data(endpoint, params):
     """Generic function to make requests to the WeatherAPI."""
@@ -23,12 +24,13 @@ def get_current_weather(location):
     """Fetch current weather for a given location."""
     params = {'q': location}
     data = get_weather_data('current', params)
-    data_weather = data.get('current')
-    lat, lon = data.get('location')['lat'], data.get('location')['lon']
-    data_weather['lat'], data_weather['lon'] = lat, lon
-    if data:
+    if data and 'current' in data:
+        data_weather = data.get('current')
+        lat, lon = data.get('location')['lat'], data.get('location')['lon']
+        data_weather['lat'], data_weather['lon'] = lat, lon
         return data_weather
-    return None
+    else:
+        return None
 
 
 def get_forecast_weather(location, days):
