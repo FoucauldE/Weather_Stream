@@ -1,6 +1,7 @@
 import time
 import csv
 import os
+import pandas as pd
 from datetime import datetime, timedelta
 from helper.kafka_utils import create_kafka_producer, send_message_to_kafka
 from helper.weather_api import get_current_weather, get_forecast_weather, get_historical_weather
@@ -80,17 +81,21 @@ def get_past_data(location=None, output_csv_name=None):
                 row = {
                     "last_updated": hourly_data["last_updated"],
                     "target": hourly_data["target"]
+                    "target": hourly_data["target"]
                 }
 
                 if output_csv_name:
+                    row.update(hourly_data["processed_sample"])
                     row.update(hourly_data["processed_sample"])
                     if headers is None:
                         headers = list(row.keys())
                         writer = csv.DictWriter(csvfile, fieldnames=headers)
                         writer.writeheader()
                     writer.writerow(row)
+                    writer.writerow(row)
 
                 else:
+                    row["processed_sample"] = hourly_data["processed_sample"]
                     row["processed_sample"] = hourly_data["processed_sample"]
                     send_message_to_kafka(producer, 'data-previous-week', row)
 
@@ -99,10 +104,45 @@ def get_past_data(location=None, output_csv_name=None):
     if output_csv_name:
         csvfile.close()
 
+def format_csv(csv_name="all_weather_data.csv", prediction_distance=1):
+    """
+    Input: csv file
+    Output: the same but with the target added at the end of each line
+    """
+    # Load the csv file
+    csv_path = "Data/" + csv_name
+    df = pd.read_csv(csv_path)
+
+    # Add the last column of the next row to the current row
+    df['futur_target'] = df['target'].shift(-prediction_distance)
+    df = df.iloc[:-1]
+    
+    # Drop columns for which the following lat,lon are not the same
+    df["next_lat"] = df['lat'].shift(-1)
+    df["next_lon"] = df['lon'].shift(-1)
+
+    # Keep only the rows with the same lat, lon
+    df_filtered = df[(df['lat'] == df["next_lat"]) & (df['lon'] == df["next_lon"])]
+
+    # Delete the temporary columns
+    df_filtered = df_filtered.drop(columns=["next_lat", "next_lon"])
+    
+    # Save to a new CSV file
+    base_directory = os.path.dirname(csv_path)
+    output_file_path = os.path.join(base_directory, csv_name[:-4] + "_with_Y.csv")
+    df_filtered.to_csv(output_file_path, index=False)
+
+
 
 if __name__ == "__main__":
     # to test without streamlit (with default loc: Paris)
     # print("Starting collecting live data...")
     # start_ingesting_live_data('Paris')
     print("Starting collecting past week data")
-    get_past_data('Paris')
+    train_start_date, train_end_date = define_collection_timespan()
+    # Convert date for file name
+    formatted_date_start = train_start_date.strftime("%Y-%m-%d_%H-%M-%S")
+    formatted_date_end = train_end_date.strftime("%Y-%m-%d_%H-%M-%S")    
+    file_name = f"{formatted_date_start}_{formatted_date_end}_past_data.csv"
+    get_past_data(location=None, output_csv_name=file_name)
+    format_csv(csv_name=file_name)
