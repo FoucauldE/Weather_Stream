@@ -22,7 +22,7 @@ model = convert_sklearn_to_river(sklearn_model)
 metric = MSE()
 
 
-def train_and_predict():
+def train_and_predict(consumer):
     """
     Consume messages from Kafka, train the model incrementally, and make predictions.
     Currently adapted to receive live data.
