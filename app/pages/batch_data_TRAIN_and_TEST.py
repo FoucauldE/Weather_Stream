@@ -6,8 +6,8 @@ st.title('⛅ Weather')
 
 if st.button("Enter"):
     try:
-        R2 = main()
-        if R2 is not None:
+        R2_train, R2_test = main()
+        if R2_test is not None:
             st.success(f"Batch model was trained successfully!")
         else:
             st.error(f"Failed to train batch model.")

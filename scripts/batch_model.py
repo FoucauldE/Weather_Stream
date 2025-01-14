@@ -6,16 +6,17 @@ from river import compose, linear_model, metrics, preprocessing
 from river.tree import HoeffdingTreeRegressor
 from kafka import KafkaConsumer
 import json
-
+from sklearn.linear_model import SGDRegressor
+from river.compat.sklearn_to_river import convert_sklearn_to_river
 
 def main():
     # Kafka configuration
-    KAFKA_TOPIC_TRAIN = "weather_train_with_Y"
-    KAFKA_TOPIC_TEST = "weather_test_with_Y"
+    KAFKA_TOPIC_TRAIN = "weather_train_with_Y_2"
+    KAFKA_TOPIC_TEST = "weather_test_with_Y_2"
     KAFKA_BOOTSTRAP_SERVER = "localhost:9092"
 
     # Variables
-    MAX_MESSAGES_TRAIN = int(len(CITIES_LIST) * 24 * 8 * 0.8)
+    MAX_MESSAGES_TRAIN = int(len(CITIES_LIST) * 24 * 8 * 0.8 - 1)
     MAX_MESSAGES_TEST = int(len(CITIES_LIST) * 24 * 8 * 0.2)
 
     # Load the data
@@ -43,10 +44,11 @@ def main():
     # River for online learning
     model = compose.Pipeline(
         preprocessing.StandardScaler(),
-        #linear_model.LinearRegression()
-        HoeffdingTreeRegressor()
+        linear_model.LinearRegression()
+        #HoeffdingTreeRegressor()
     )
-    metric = metrics.R2()
+    
+    metric_train = metrics.R2()
 
     # Kafka Consumer
     #consumer_train = create_kafka_consumer(KAFKA_TOPIC_TRAIN, auto_offset_reset='earliest')
@@ -63,14 +65,21 @@ def main():
         data_point = message.value
 
         # Prepare features and target
-        features = {key: value for key, value in data_point.items() if key != "y_target"}
+        #features = {key: value for key, value in data_point.items() if key != "y_target"}
+        features = {key: value for key, value in data_point.items() if key == "precip_mm"}
         target = data_point['y_target']
         print(target)
         # Train the model
         model.learn_one(features, target)
         print(i)
+        prediction = model.predict_one(features)
+        metric_train.update(target, prediction)
+        print(f"X: {data_point['precip_mm']}, Actual value: {target:.2f}, Prediction: {prediction:.2f}, R²: {metric_train.get():.4f}")
         # Update the loop variables
         i += 1
+    print(f"End of training. R²: {metric_train.get():.4f}")
+
+    metric_test = metrics.R2()
 
     # Test
     print("Test...")
@@ -82,7 +91,8 @@ def main():
         print(i)
 
         # Prepare features and target
-        features = {key: value for key, value in data_point.items() if key != "y_target"}
+        #features = {key: value for key, value in data_point.items() if key != "y_target"}
+        features = {key: value for key, value in data_point.items() if key == "precip_mm"}
         target = data_point["y_target"]
 
         # Predict the next value of 'precip_mm'
@@ -90,13 +100,13 @@ def main():
         print("YES",i)
 
         # Evaluate the performance
-        metric.update(target, prediction)
-        print(f"Actual value: {target:.2f}, Prediction: {prediction:.2f}, R²: {metric.get():.4f}")
+        metric_test.update(target, prediction)
+        print(f"X: {data_point['precip_mm']}, Actual value: {target:.2f}, Prediction: {prediction:.2f}, R²: {metric_test.get():.4f}")
 
         # Update the loop variables
         i += 1
 
     print("End of the testing part.")
-    print(f"Final R²: {metric.get():.4f}")
+    print(f"Final R²: {metric_test.get():.4f}")
 
-    return(metric.get())
+    return metric_train.get(), metric_test.get()

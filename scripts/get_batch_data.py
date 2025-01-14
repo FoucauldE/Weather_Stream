@@ -82,7 +82,7 @@ def train_test_csv(file_path):
     data = pd.read_csv(file_path)
     base_directory = os.path.dirname(file_path)
     # Split into train and test
-    train_data, test_data = train_test_split(data, test_size=0.2, random_state=42)
+    train_data, test_data = train_test_split(data, test_size=0.2, random_state=50)
     # Output file paths
     train_file_path = os.path.join(base_directory, 'train_data_historical.csv')
     test_file_path = os.path.join(base_directory, 'test_data_historical.csv')
