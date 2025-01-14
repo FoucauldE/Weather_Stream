@@ -77,24 +77,22 @@ def get_past_data(location=None, output_csv_name=None):
             processed_data = preprocess_data(raw_data)
 
             for hourly_data in processed_data:
-                print(hourly_data)
                 row = {
                     "last_updated": hourly_data["last_updated"],
-                    "processed_sample": hourly_data["processed_sample"],
-                    "target": hourly_data["target"] # ,
-                    # **hourly_data["processed_sample"]
+                    "target": hourly_data["target"]
                 }
 
                 if output_csv_name:
+                    row.update(hourly_data["processed_sample"])
                     if headers is None:
                         headers = list(row.keys())
                         writer = csv.DictWriter(csvfile, fieldnames=headers)
                         writer.writeheader()
-                    writer.writerows(row)
+                    writer.writerow(row)
 
                 else:
+                    row["processed_sample"] = hourly_data["processed_sample"]
                     send_message_to_kafka(producer, 'data-previous-week', row)
-                time.sleep(10)
 
         date += timedelta(days=1)
 
@@ -107,4 +105,4 @@ if __name__ == "__main__":
     # print("Starting collecting live data...")
     # start_ingesting_live_data('Paris')
     print("Starting collecting past week data")
-    get_data('Paris')
+    get_past_data('Paris')

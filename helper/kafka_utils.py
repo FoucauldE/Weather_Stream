@@ -1,6 +1,7 @@
 from kafka import KafkaProducer, KafkaConsumer
 import json
 from config.config import KAFKA_BROKER
+import time
 
 def create_kafka_producer():
     producer = KafkaProducer(
@@ -11,7 +12,8 @@ def create_kafka_producer():
 
 def send_message_to_kafka(producer, output_topic, message):
     producer.send(output_topic, message)
-    print("message sent", message)
+    # print("\nmessage sent", message)
+    # time.sleep(0.5)
     producer.flush() #  ensures all previously sent messages have completed
 
 def create_kafka_consumer(input_topic, group_id, auto_offset_rest='latest'):
