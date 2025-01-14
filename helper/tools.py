@@ -135,13 +135,12 @@ def preprocess_data(data):
 
         return last_updated, processed_sample, target
 
-    is_live_data = data['type'] == 'current'
-    nested_data = data.get('data', {})
-    lat, lon = nested_data.get("lat", None), nested_data.get("lon", None)
-
-    processed_samples = []
-
+    is_live_data = 'type' in data and data['type'] == 'current'
+    
     if is_live_data:
+        processed_samples = []
+        nested_data = data.get('data', {})
+        lat, lon = nested_data.get("lat", None), nested_data.get("lon", None)
         last_updated, processed_sample, target = preprocess_single_sample(nested_data, lat, lon, 'last_updated_epoch')
         processed_samples.append({
             "last_updated": last_updated,
@@ -149,10 +148,13 @@ def preprocess_data(data):
             "target": target
         })
     else:
-        day_data = nested_data.get('forecastday', [])
+        processed_samples = []
+        lat, lon = data.get("lat", None), data.get("lon", None)
+        day_data = data.get("forecastday", [])[0]
         hourly_data = day_data.get('hour', [])
         for hour_data in hourly_data:
-            last_updated, processed_samples, target = preprocess_single_sample(hour_data, lat, lon, 'time_epoch')
+            last_updated, processed_sample, target = preprocess_single_sample(hour_data, lat, lon, 'time_epoch')
+            
             processed_samples.append({
                 "last_updated": last_updated,
                 "processed_sample": processed_sample,
