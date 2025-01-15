@@ -26,9 +26,14 @@ VARIABLES_TO_KEEP = ["temp_c",
 TARGET_VARIABLE = "precip_mm"
 
 CITIES_LIST = ["Palaiseau",
-               "Saint-Jean-de-Chevelu",
-               #"Bordeaux",
-               #"Nice",
-               #"Saint Malo",
-               #"Brest France"
+               "Lyon",
+               "Bordeaux",
+               "Nice",
+               "Saint Malo",
+               "Brest France",
+               "Paris",
+               "Nantes",
+               "Strasbourg",
+               "Marseille",
+               "Toulouse"
                ]
