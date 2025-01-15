@@ -1,7 +1,6 @@
-from datetime import datetime
 from config.config import VARIABLES_TO_KEEP, TARGET_VARIABLE
 import math
- 
+
 
 def preprocess_data(data):
     """
