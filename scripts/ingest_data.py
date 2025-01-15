@@ -12,10 +12,13 @@ OUTPUT_TOPIC = 'weather-data'
 
 producer = create_kafka_producer()
 
-def fetch_and_send_current_weather(location, output_topic):
+def fetch_and_send_current_weather(location, output_topic, to_preprocess=False):
     current_weather = get_current_weather(location)
     if current_weather:
-        send_message_to_kafka(producer, output_topic, {'type': 'current', 'data': current_weather})
+        message = {'type': 'current', 'data': current_weather}
+        if to_preprocess:
+            message = preprocess_data(message)[0]
+        send_message_to_kafka(producer, output_topic, message)
         return current_weather
     return None
 
@@ -38,7 +41,7 @@ def fetch_and_send_historical_weather(location, date, hour=None):
 def start_ingesting_live_data(location):
     """Used for predictions on live data"""
     while True:
-        fetch_and_send_current_weather(location, 'weather-live-data')
+        fetch_and_send_current_weather(location, 'weather-live-data-2', to_preprocess=True)
         time.sleep(60)
 
 def define_collection_timespan():
@@ -81,7 +84,6 @@ def get_past_data(location=None, output_csv_name=None):
                 row = {
                     "last_updated": hourly_data["last_updated"],
                     "target": hourly_data["target"]
-                    "target": hourly_data["target"]
                 }
 
                 if output_csv_name:
@@ -97,12 +99,17 @@ def get_past_data(location=None, output_csv_name=None):
                 else:
                     row["processed_sample"] = hourly_data["processed_sample"]
                     row["processed_sample"] = hourly_data["processed_sample"]
-                    send_message_to_kafka(producer, 'data-previous-week', row)
+                    # send_message_to_kafka(producer, 'data-previous-week', row)
+                    send_message_to_kafka(producer, 'weather-live-data-2', row)
 
         date += timedelta(days=1)
 
     if output_csv_name:
         csvfile.close()
+
+    else:
+        print("Finished collecting past data, going live!")
+        start_ingesting_live_data(location)
 
 def format_csv(csv_name="all_weather_data.csv", prediction_distance=1):
     """
