@@ -10,5 +10,11 @@ archives/*
 # env
 kafka-env/*
 
+# data
+Data/*
+
+# graphs
+Graphs/*
+
 # test files
 4_Test_preds.py

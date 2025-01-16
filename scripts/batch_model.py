@@ -42,7 +42,7 @@ print("Test R²: ", r2_score(y_test, model.predict(X_test)))
 
 # 5. Sauvegarde de la pipeline
 joblib.dump(scaler, f"Models/batch_standard_scaler.joblib")
-joblib.dump(model, f"Models/batch_model_linear.joblib")
+joblib.dump(model, f"Models/batch_model_SGD.joblib")
 
 # 6. Conversion de la pipeline en river
 river_model = convert_sklearn_to_river(model)
