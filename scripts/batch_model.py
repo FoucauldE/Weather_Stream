@@ -1,112 +1,96 @@
-from helper.kafka_utils import create_kafka_producer, create_kafka_consumer, send_message_to_kafka, consume_messages_from_kafka
 import pandas as pd
-from config.config import TARGET_VARIABLE, CITIES_LIST
-import time
-from river import compose, linear_model, metrics, preprocessing
-from river.tree import HoeffdingTreeRegressor
-from kafka import KafkaConsumer
-import json
-from sklearn.linear_model import SGDRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression, SGDRegressor
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.preprocessing import StandardScaler
+import joblib
 from river.compat.sklearn_to_river import convert_sklearn_to_river
+import matplotlib.pyplot as plt
+import seaborn as sns
+from config.config import VARIABLES_TO_KEEP
 
-def main():
-    # Kafka configuration
-    KAFKA_TOPIC_TRAIN = "weather_train_with_Y_2"
-    KAFKA_TOPIC_TEST = "weather_test_with_Y_2"
-    KAFKA_BOOTSTRAP_SERVER = "localhost:9092"
+csv_name = "Data/final_2025-01-08_00-00-00_2025-01-15_00-00-00_past_data_with_Y.csv"
 
-    # Variables
-    MAX_MESSAGES_TRAIN = int(len(CITIES_LIST) * 24 * 8 * 0.8 - 1)
-    MAX_MESSAGES_TEST = int(len(CITIES_LIST) * 24 * 8 * 0.2)
+# Load the data
+data = pd.read_csv(csv_name)
+data = data.rename(columns={"target": "precip_mm"})
+data = data.rename(columns={"wind_degree_cos": "wind_degree"})
+
+# Define X and y
+X = data[VARIABLES_TO_KEEP]  # Features
+y = data["futur_target"]  # Target
+
+# 3. Séparation des données
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=56)
+
+# Pipeline
+scaler = StandardScaler()
+model = SGDRegressor()
+
+# Entraînement de la pipeline linear
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+model.fit(X_train, y_train)
+
+# 4. Évaluation
+y_pred = model.predict(X_test)
+print("Train MSE: ", mean_squared_error(y_train, model.predict(X_train)))
+print("Test MSE: ", mean_squared_error(y_test, model.predict(X_test)))
+
+print("Train R²: ", r2_score(y_train, model.predict(X_train)))
+print("Test R²: ", r2_score(y_test, model.predict(X_test)))
+
+# 5. Sauvegarde de la pipeline
+joblib.dump(scaler, f"Models/batch_standard_scaler.joblib")
+joblib.dump(model, f"Models/batch_model_linear.joblib")
+
+# 6. Conversion de la pipeline en river
+river_model = convert_sklearn_to_river(model)
+print("Model converted to River!")
+
+def features_selection(correl_matrix_plot=True, correl_with_target=True, save=True):
+    csv_name = "Data/final_2025-01-08_00-00-00_2025-01-15_00-00-00_past_data_with_Y.csv"
 
     # Load the data
-    data = pd.read_csv("Data/all_weather_data_with_Y.csv")
+    data = pd.read_csv(csv_name)
+    data = data.rename(columns={"target": "precip_mm"})
 
-    # Split
-    #train_data = data.iloc[:int(0.8 * len(data))]
-    #test_data = data.iloc[int(0.8 * len(data)):-1]
-    train_data = pd.read_csv("Data/train_data_historical.csv")
-    test_data = pd.read_csv("Data/test_data_historical.csv")
+    # Compute the correlation matrix
+    correlation_matrix = data.corr()
 
-    # Kafka Producer
-    producer = create_kafka_producer()
+    if correl_matrix_plot:
+        # Plot it
+        plt.figure(figsize=(12, 8))
+        sns.heatmap(correlation_matrix, annot=True, fmt=".2f", cmap="coolwarm", cbar=True, linewidths=0.5)
+        plt.title("Correlation matrix", fontsize=16)
+        plt.xticks(rotation=45, ha='right')
+        plt.yticks(rotation=0)
+        plt.tight_layout()
+        if save:
+            plt.savefig("Graphs/correlation_matrix.png")
+        plt.show()
 
-    print("Sending train data to Kafka...")
-    for index, row in train_data.iterrows():
-        producer.send(KAFKA_TOPIC_TRAIN, value=row.to_dict())
-        time.sleep(0.1)
+    if correl_with_target:
+        # Absolute correlation with the target computation
+        target_corr = correlation_matrix["futur_target"].apply(abs).sort_values(ascending=False)
+        # Plot the results
+        plt.figure(figsize=(12, 8))
+        sns.barplot(
+            x=target_corr.index,
+            y=target_corr.values,
+            hue=target_corr.index,
+            palette="coolwarm",
+            legend=False
+        )
+        plt.title("Absolute correlation of the features with the target", fontsize=16)
+        plt.xticks(rotation=45, ha='right')
+        plt.ylabel("Absolute correlation", fontsize=14)
+        plt.tight_layout()
+        if save:
+            plt.savefig("Graphs/correlation_futur_target.png")
+        plt.show()
 
-    print("Sending test data to Kafka...")
-    for index, row in test_data.iterrows():
-        producer.send(KAFKA_TOPIC_TEST, value=row.to_dict())
-        time.sleep(0.1)
+if __name__ == "__main__":
 
-    # River for online learning
-    model = compose.Pipeline(
-        preprocessing.StandardScaler(),
-        linear_model.LinearRegression()
-        #HoeffdingTreeRegressor()
-    )
-    
-    metric_train = metrics.R2()
-
-    # Kafka Consumer
-    #consumer_train = create_kafka_consumer(KAFKA_TOPIC_TRAIN, auto_offset_reset='earliest')
-    consumer_train = KafkaConsumer(KAFKA_TOPIC_TRAIN, bootstrap_servers=KAFKA_BOOTSTRAP_SERVER, auto_offset_reset='earliest', value_deserializer=lambda x: json.loads(x.decode('utf-8')))
-    consumer_test = KafkaConsumer(KAFKA_TOPIC_TEST, bootstrap_servers=KAFKA_BOOTSTRAP_SERVER, auto_offset_reset='earliest', value_deserializer=lambda x: json.loads(x.decode('utf-8')))
-    #consumer_test = create_kafka_consumer(KAFKA_TOPIC_TEST, auto_offset_reset='earliest')
-
-    # Train
-    i = 0
-    print("Training...")
-    for message in consumer_train:
-        if i >= MAX_MESSAGES_TRAIN:  # Stop after the max number of iterations is reached
-            break
-        data_point = message.value
-
-        # Prepare features and target
-        #features = {key: value for key, value in data_point.items() if key != "y_target"}
-        features = {key: value for key, value in data_point.items() if key == "precip_mm"}
-        target = data_point['y_target']
-        print(target)
-        # Train the model
-        model.learn_one(features, target)
-        print(i)
-        prediction = model.predict_one(features)
-        metric_train.update(target, prediction)
-        print(f"X: {data_point['precip_mm']}, Actual value: {target:.2f}, Prediction: {prediction:.2f}, R²: {metric_train.get():.4f}")
-        # Update the loop variables
-        i += 1
-    print(f"End of training. R²: {metric_train.get():.4f}")
-
-    metric_test = metrics.R2()
-
-    # Test
-    print("Test...")
-    i = 0
-    for message in consumer_test:
-        if i >= MAX_MESSAGES_TEST:  # Stop after the max number of iterations is reached
-            break
-        data_point = message.value
-        print(i)
-
-        # Prepare features and target
-        #features = {key: value for key, value in data_point.items() if key != "y_target"}
-        features = {key: value for key, value in data_point.items() if key == "precip_mm"}
-        target = data_point["y_target"]
-
-        # Predict the next value of 'precip_mm'
-        prediction = model.predict_one(features)
-        print("YES",i)
-
-        # Evaluate the performance
-        metric_test.update(target, prediction)
-        print(f"X: {data_point['precip_mm']}, Actual value: {target:.2f}, Prediction: {prediction:.2f}, R²: {metric_test.get():.4f}")
-
-        # Update the loop variables
-        i += 1
-
-    print("End of the testing part.")
-    print(f"Final R²: {metric_test.get():.4f}")
-
-    return metric_train.get(), metric_test.get()
+    print("Training the batch model on past data...")
+    features_selection()

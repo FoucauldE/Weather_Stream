@@ -94,7 +94,6 @@ def get_past_data(location=None, output_csv_name=None):
                         writer = csv.DictWriter(csvfile, fieldnames=headers)
                         writer.writeheader()
                     writer.writerow(row)
-                    writer.writerow(row)
 
                 else:
                     row["processed_sample"] = hourly_data["processed_sample"]
