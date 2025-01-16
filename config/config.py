@@ -5,6 +5,7 @@ MAX_HISTORY_DAYS = 7
 # ARCHIVE_DIR = './archives'
 # WAIT_TIME = 10
 
+"""
 VARIABLES_TO_KEEP = ["temp_c",
                     "is_day",
                     "wind_kph",
@@ -22,13 +23,32 @@ VARIABLES_TO_KEEP = ["temp_c",
                     "lat",
                     "lon"
 ]
+"""
+
+VARIABLES_TO_KEEP = ["precip_mm",
+                    "cloud",
+                    "pressure_mb",
+                    "humidity",
+                    "dewpoint_c",
+                    "vis_km",
+                    "wind_degree", # later separated into cos and sin
+                    "lat",
+                    "wind_kph",
+                    "temp_c",
+                    "lon"]
 
 TARGET_VARIABLE = "precip_mm"
 
 CITIES_LIST = ["Palaiseau",
-               #"Saint-Jean-de-Chevelu",
-               #"Bordeaux",
-               #"Nice",
-               #"Saint Malo",
-               #"Brest France"
+               "Lyon",
+               "Bordeaux",
+               "Nice",
+               "Saint Malo",
+               "Brest France",
+               "Paris",
+               "Nantes",
+               "Strasbourg",
+               "Marseille",
+               "Toulouse",
+               "Calais"
                ]
