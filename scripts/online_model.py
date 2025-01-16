@@ -2,73 +2,85 @@ from sklearn.linear_model import SGDRegressor
 from river.metrics import MSE
 from river.compat.sklearn_to_river import convert_sklearn_to_river
 from helper.kafka_utils import create_kafka_consumer, consume_messages_from_kafka, create_kafka_producer, send_message_to_kafka
-import json
-import time
-from config.config import KAFKA_BROKER
-from river import linear_model, metrics, preprocessing
+import joblib
+from river import preprocessing
+import pandas as pd
+from config.config import SELECTED_FEATURES
 
+PREDICTIONS_TOPIC = 'prediction-output'
+producer_latest_pred = create_kafka_producer()
+producer_evaluated_preds = create_kafka_producer()
 
-# INPUT_TOPIC = 'weather-live-data'
-# input_topic_past_data = 'data-previous-week'
-OUTPUT_TOPIC = 'rain-prediction-output'
-# CONSUMER_GROUP = 'rain-prediction-group'
+# Model sklearn trained
+sklearn_scaler = joblib.load("models/batch_standard_scaler.joblib")
+sklearn_model = joblib.load("models/batch_model_SGD.joblib")
 
-# consumer = create_kafka_consumer(INPUT_TOPIC, 'live-weather-consumer-group')
-producer_predictions = create_kafka_producer()
+# Online model from scratch
+model_cold_start = convert_sklearn_to_river(SGDRegressor())
+river_scaler = preprocessing.StandardScaler()
 
-sklearn_model = SGDRegressor()
-model = convert_sklearn_to_river(sklearn_model)
-metric = MSE()
+# Online model from sklearn trained model
+model_pre_trained = convert_sklearn_to_river(sklearn_model)
 
-scaler = preprocessing.StandardScaler()
-
-
+# Metrics for each of the model
+metric_sklearn = {'n': 0, 'mse': 0}
+metric_cold_start = MSE()
+metric_pre_trained = MSE()
 
 def train_and_predict():
     """
     Consume messages from Kafka, train the model incrementally, and send predictions.
     """
     consumer = create_kafka_consumer('weather-live-data-2', 'live-data-group')
-    previous_timestamp, previous_features, previous_target = None, None, None
+    previous_timestamp, scaled_prev_features = None, None
+    previous_pred_pre_trained, previous_pred_cold_start, previous_pred_sklearn = None, None, None
 
     for message in consume_messages_from_kafka(consumer):
-        # print('\nmessage:', message)
         timestamp, features, target = message["last_updated"], message["processed_sample"], message["target"]
+
+        # Prepare and predict for current sample
+
+        features["prev_target"] = target
+
+        river_scaler.learn_one(features)
+        scaled_features = river_scaler.transform_one(features)
+
+        y_pred_pre_trained = model_pre_trained.predict_one(scaled_features)
+        y_pred_cold_start = model_cold_start.predict_one(scaled_features)
+
+        feature_values = list(features.values())
+        feature_df = pd.DataFrame([feature_values], columns=SELECTED_FEATURES)
+        scaled_features_sklearn = sklearn_scaler.transform(feature_df)
+        y_pred_sklearn = sklearn_model.predict(scaled_features_sklearn)[0]
+
+
+        # Evaluate prediction for sample from previous hour
+        if (previous_timestamp is not None) and (timestamp - previous_timestamp == 3600):
+
+            # online models
+            metric_pre_trained.update(target, previous_pred_pre_trained)
+            model_pre_trained.learn_one(scaled_prev_features, target)
+
+            metric_cold_start.update(target, previous_pred_cold_start)
+            model_cold_start.learn_one(scaled_prev_features, target)
+
+            # sklearn model
+            error_sklearn = (target - previous_pred_sklearn) ** 2
+            metric_sklearn['mse'] = ((metric_sklearn['n'] * metric_sklearn['mse']) + error_sklearn) / (metric_sklearn['n'] + 1)
+            metric_sklearn['n'] += 1
+
+            send_message_to_kafka(producer_evaluated_preds, PREDICTIONS_TOPIC, {
+                'timestamp': timestamp,
+                'prediction pre trained': max(0, previous_pred_pre_trained),
+                'prediction cold start': max(0, previous_pred_cold_start),
+                'prediction sklearn': max(0, previous_pred_sklearn),
+                'MSE cold start': metric_cold_start.get(),
+                'MSE pre trained': metric_pre_trained.get(),
+                'MSE sklearn': metric_sklearn['mse'],
+                'actual': target,
+                'next prediction': max(0, y_pred_pre_trained)
+            })
         
-        if previous_features is not None:
-            # check if data from an hour later (might need to allow a margin, ie not exactly 3600s)
-            if timestamp - previous_timestamp == 3600:
-                # features["prev_target"] = previous_target
-                scaler.learn_one(previous_features)
-                scaled_prev_features = scaler.transform_one(previous_features)
-
-                y_pred = model.predict_one(scaled_prev_features)
-                metric.update(target, y_pred)
-                model.learn_one(scaled_prev_features, target)
-
-                send_message_to_kafka(producer_predictions, OUTPUT_TOPIC, {
-                    'timestamp': timestamp,
-                    'prediction': max(0, y_pred),
-                    'actual': target
-                })
-                # print(f"Prediction: {y_pred}, Actual: {target}")
-                
-        previous_timestamp, previous_features, previous_target = timestamp, features, target
-
-
-if __name__ == "__main__":
-    print("Starting online learning model...")
-    # consumer_preds = create_kafka_consumer('rain-prediction-output')
-
-    # consumer_past_data = create_kafka_consumer(input_topic_past_data, 'past-data-group')
-    # while True:
-        # train_and_predict(consumer_past_data)
-
-    """
-    for message in consume_messages_from_kafka(consumer_preds):
-        prediction = message.value
-        print(f"Prediction for next 15min: {prediction['prediction']} mm")
-        print(f"Actual value: {prediction['actual']} mm")
-    """
-
-        # time.sleep(10)
+        previous_timestamp, scaled_prev_features = timestamp, scaled_features
+        previous_pred_pre_trained, previous_pred_cold_start = y_pred_pre_trained, y_pred_cold_start
+        previous_pred_sklearn = y_pred_sklearn

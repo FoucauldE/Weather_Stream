@@ -25,17 +25,30 @@ VARIABLES_TO_KEEP = ["temp_c",
 ]
 """
 
-VARIABLES_TO_KEEP = ["precip_mm",
+VARIABLES_TO_KEEP = [# "precip_mm",
                     "cloud",
                     "pressure_mb",
                     "humidity",
                     "dewpoint_c",
                     "vis_km",
-                    "wind_degree", # later separated into cos and sin
-                    "lat",
                     "wind_kph",
                     "temp_c",
-                    "lon"]
+                    # "wind_degree", # later separated into cos and sin
+                    "lat",
+                    "lon"] # add previous target last
+
+SELECTED_FEATURES = ["cloud",
+                     "pressure_mb",
+                     "humidity",
+                     "dewpoint_c",
+                     "vis_km",
+                     "wind_kph",
+                     "temp_c",
+                     "wind_degree_sin",
+                     "wind_degree_cos",
+                     "lat",
+                     "lon",
+                     "prev_target"]
 
 TARGET_VARIABLE = "precip_mm"
 
