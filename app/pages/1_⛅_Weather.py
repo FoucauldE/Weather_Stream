@@ -29,7 +29,7 @@ else:
 if st.button("Enter"):
     try:
         if weather_type == "current":
-            result = fetch_and_send_current_weather(location)
+            result = fetch_and_send_current_weather(location, 'weather-data')
         elif weather_type == "forecast":
             result = fetch_and_send_forecast_weather(location, forecast_days)
         elif weather_type == "historical":
