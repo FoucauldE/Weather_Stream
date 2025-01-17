@@ -119,9 +119,10 @@ def pipeline_fit_save(X_train, X_test, y_train, y_test, save=True, model=SGDRegr
     print("Train R²: ", r2_score(y_train, model.predict(X_train)))
     print("Test R²: ", r2_score(y_test, model.predict(X_test)))
 
-    # Save the pipeline
-    joblib.dump(scaler, f"Models/batch_standard_scaler.joblib")
-    joblib.dump(model, f"Models/batch_model_SGD.joblib")
+    if save:
+        # Save the pipeline
+        joblib.dump(scaler, f"Models/batch_standard_scaler.joblib")
+        joblib.dump(model, f"Models/batch_model_SGD.joblib")
 
     # Test the conversion into to rive
     try:
@@ -186,8 +187,7 @@ if __name__ == "__main__":
 
     print("Training the batch model on past data...")
     # Define the file name
-    #csv_name = "Data/final_2025-01-08_00-00-00_2025-01-15_00-00-00_past_data_with_Y.csv"
-    csv_name = "Data/final_2025-01-10_00-00-00_2025-01-17_00-00-00_past_data_with_Y.csv"
+    csv_name = 'Data/DEFINITIVE_2025-01-10_00-00-00_2025-01-17_00-00-00_past_data_with_Y.csv'
     #Load the data
     data = load_and_prepare_csv(csv_name)
     # Plot the evolution of the target
