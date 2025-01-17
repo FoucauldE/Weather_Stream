@@ -16,5 +16,4 @@ Data/*
 # graphs
 Graphs/*
 
-# test files
-4_Test_preds.py
+models/*

@@ -1,7 +1,7 @@
 from kafka import KafkaProducer, KafkaConsumer
 import json
 from config.config import KAFKA_BROKER
-import time
+import uuid
 
 def create_kafka_producer():
     producer = KafkaProducer(
@@ -12,15 +12,13 @@ def create_kafka_producer():
 
 def send_message_to_kafka(producer, output_topic, message):
     producer.send(output_topic, message)
-    # print("\nmessage sent", message)
-    # time.sleep(0.5)
     producer.flush() #  ensures all previously sent messages have completed
 
 def create_kafka_consumer(input_topic, group_id, auto_offset_rest='latest'):
     consumer = KafkaConsumer(
         input_topic,
         bootstrap_servers=KAFKA_BROKER,
-        group_id=group_id,
+        group_id=f"{group_id}-{uuid.uuid4()}",
         auto_offset_reset=auto_offset_rest,
         value_deserializer=lambda m: json.loads(m.decode('utf-8')),
     )

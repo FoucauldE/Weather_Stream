@@ -107,7 +107,6 @@ def get_past_data(location=None, output_csv_name=None):
         csvfile.close()
 
     else:
-        print("Finished collecting past data, going live!")
         start_ingesting_live_data(location)
 
 def format_csv(csv_name="all_weather_data.csv", prediction_distance=1):
@@ -141,10 +140,6 @@ def format_csv(csv_name="all_weather_data.csv", prediction_distance=1):
 
 
 if __name__ == "__main__":
-    # to test without streamlit (with default loc: Paris)
-    # print("Starting collecting live data...")
-    # start_ingesting_live_data('Paris')
-    print("Starting collecting past week data")
     train_start_date, train_end_date = define_collection_timespan()
     # Convert date for file name
     formatted_date_start = train_start_date.strftime("%Y-%m-%d_%H-%M-%S")
