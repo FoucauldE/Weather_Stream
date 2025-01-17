@@ -5,11 +5,14 @@ MAX_HISTORY_DAYS = 7
 # ARCHIVE_DIR = './archives'
 # WAIT_TIME = 10
 
-"""
-VARIABLES_TO_KEEP = ["temp_c",
+
+VARIABLES_TO_KEEP = ["lat",
+                    "lon",
+                    "time_epoch",
+                    "temp_c",
                     "is_day",
                     "wind_kph",
-                    "wind_degree", # later separated into cos and sin
+                    "wind_degree",
                     "pressure_mb",
                     "humidity",
                     "cloud",
@@ -19,23 +22,8 @@ VARIABLES_TO_KEEP = ["temp_c",
                     "dewpoint_c",
                     "vis_km",
                     "gust_kph",
-                    "uv",
-                    "lat",
-                    "lon"
-]
-"""
-
-VARIABLES_TO_KEEP = [# "precip_mm",
-                    "cloud",
-                    "pressure_mb",
-                    "humidity",
-                    "dewpoint_c",
-                    "vis_km",
-                    "wind_kph",
-                    "temp_c",
-                    # "wind_degree", # later separated into cos and sin
-                    "lat",
-                    "lon"] # add previous target last
+                    "uv"                  
+                    ]
 
 SELECTED_FEATURES = ["cloud",
                      "pressure_mb",
@@ -63,5 +51,14 @@ CITIES_LIST = ["Palaiseau",
                "Strasbourg",
                "Marseille",
                "Toulouse",
-               "Calais"
+               "Calais",
+               "Clermont-Ferrand",
+               "La Rochelle",
+               "Le Mans",
+               "Troyes",
+               "Orléans",
+               "Biarritz",
+               "Perpignan",
+               "Limoges",
+               "Châteauroux"
                ]

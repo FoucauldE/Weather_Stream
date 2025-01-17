@@ -10,4 +10,11 @@ archives/*
 # env
 kafka-env/*
 
+# data
+Data/*
+
+# graphs
+Graphs/*
+
+# models
 models/*
