@@ -109,7 +109,7 @@ def get_past_data(location=None, output_csv_name=None):
     else:
         start_ingesting_live_data(location)
 
-def format_csv(csv_name="all_weather_data.csv", prediction_distance=1):
+def format_csv(csv_name="all_weather_data.csv", prediction_distance=1, delete_first_csv=False):
     """
     Input: csv file
     Output: the same but with the target added at the end of each line
@@ -136,10 +136,14 @@ def format_csv(csv_name="all_weather_data.csv", prediction_distance=1):
     base_directory = os.path.dirname(csv_path)
     output_file_path = os.path.join(base_directory, csv_name[:-4] + "_with_Y.csv")
     df_filtered.to_csv(output_file_path, index=False)
+    if delete_first_csv:
+        base_directory = os.path.dirname(csv_path)
+        first_file_path = os.path.join(base_directory, csv_name)
+        os.remove(first_file_path)
 
 def ingest_hist_data_streamlit(file_name):
     get_past_data(location=None, output_csv_name=file_name)
-    format_csv(csv_name=file_name)
+    format_csv(csv_name=file_name, delete_first_csv=True)
 
 def default_file_name():
     train_start_date, train_end_date = define_collection_timespan()
