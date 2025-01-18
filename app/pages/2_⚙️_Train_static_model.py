@@ -2,8 +2,8 @@ import streamlit as st
 from scripts.ingest_data import ingest_hist_data_streamlit, default_file_name
 from scripts.batch_model import train_test_model
 
-st.set_page_config(page_title="Static model: downloading data and training", page_icon="⚙️")
-st.title('⚙️ Static model: downloading data and training')
+st.set_page_config(page_title="Train static model", page_icon="⚙️")
+st.title('⚙️ Train static model')
 
 option = st.radio("Pick an option:", ("Download data", "Train and test a model"))
 
@@ -35,14 +35,15 @@ elif option == "Train and test a model":
 
     save = st.checkbox("Do you want to save the model and graphics?", value=False)
     if st.button("Train and test"):
-        try:
-            mse_train, mse_test, r2_train, r2_test = train_test_model(file_to_use, save=save)
-            st.subheader("Model performance")
-            st.write(f"Train MSE : {mse_train:.4f}")
-            st.write(f"Test MSE : {mse_test:.4f}")
-            st.write(f"Train R² : {r2_train:.4f}")
-            st.write(f"Test R² : {r2_test:.4f}")
-        except Exception as e:
-            st.error(f"Training error: {e}")
+        with st.spinner('Training and testing the model...'):
+            try:
+                mse_train, mse_test, r2_train, r2_test = train_test_model(file_to_use, save=save)
+                st.subheader("Model performance")
+                st.write(f"Train MSE : {mse_train:.4f}")
+                st.write(f"Test MSE : {mse_test:.4f}")
+                st.write(f"Train R² : {r2_train:.4f}")
+                st.write(f"Test R² : {r2_test:.4f}")
+            except Exception as e:
+                st.error(f"Training error: {e}")
 
         
