@@ -109,11 +109,12 @@ def pipeline_fit_save(X_train, X_test, y_train, y_test, save=True, model=SGDRegr
     model.fit(X_train, y_train)
 
     # Evaluate the model
-    print("Train MSE: ", mean_squared_error(y_train, model.predict(X_train)))
-    print("Test MSE: ", mean_squared_error(y_test, model.predict(X_test)))
-
-    print("Train R²: ", r2_score(y_train, model.predict(X_train)))
-    print("Test R²: ", r2_score(y_test, model.predict(X_test)))
+    mse_train, mse_test = mean_squared_error(y_train, model.predict(X_train)), mean_squared_error(y_test, model.predict(X_test))
+    r2_train, r2_test = r2_score(y_train, model.predict(X_train)), r2_score(y_test, model.predict(X_test))
+    print("Train MSE: ", mse_train)
+    print("Test MSE: ", mse_test)
+    print("Train R²: ", r2_train)
+    print("Test R²: ", r2_test)
 
     if save:
         # Save the pipeline
@@ -128,6 +129,8 @@ def pipeline_fit_save(X_train, X_test, y_train, y_test, save=True, model=SGDRegr
         print(f"Error: The model is not convertible to River. Details: {e}")
     except Exception as e:
         print(f"An unexpected error occurred during conversion. Details: {e}")
+
+    return mse_train, mse_test, r2_train, r2_test
 
 def features_selection(correl_matrix_plot=True, correl_with_target=True, save=True):
     csv_name = "Data/final_2025-01-08_00-00-00_2025-01-15_00-00-00_past_data_with_Y.csv"
@@ -161,7 +164,7 @@ def features_selection(correl_matrix_plot=True, correl_with_target=True, save=Tr
         target_corr = target_corr[target_corr.index != "futur_target"]
         # Plot the results
         plt.figure(figsize=(12, 8))
-        sns.barplot(
+        ax = sns.barplot(
             x=target_corr.index,
             y=target_corr.values,
             hue=target_corr.index,
@@ -171,7 +174,8 @@ def features_selection(correl_matrix_plot=True, correl_with_target=True, save=Tr
         plt.xticks(rotation=45, ha='right')
         plt.ylabel("Absolute correlation", fontsize=14)
         plt.xlabel("Features", fontsize=14)
-        plt.grid()
+        ax.set_ylim(0, 1)
+        ax.grid(axis='y', linestyle='--', alpha=0.7)
         plt.tight_layout()
         if save:
             output_dir = "Graphs"
@@ -180,6 +184,19 @@ def features_selection(correl_matrix_plot=True, correl_with_target=True, save=Tr
             output_path = os.path.join(output_dir, "correlation_futur_target.png")
             plt.savefig(output_path)
         plt.show()
+
+def train_test_model(csv_name, save):
+    #Load the data
+    data = load_and_prepare_csv(csv_name)
+    # Plot the evolution of the target
+    plot_precip_evolution(data, save=save)
+    # Plot graphs for feature selection
+    features_selection(save=save)
+    # Temporal train/test split
+    X_train, X_test, y_train, y_test = temporal_train_test_split(data, verbose=True, split_coef=0.8)
+    # Define the pipeline, fit and print several scores
+    mse_train, mse_test, r2_train, r2_test = pipeline_fit_save(X_train, X_test, y_train, y_test, save=save, model=SGDRegressor())
+    return mse_train, mse_test, r2_train, r2_test
 
 if __name__ == "__main__":
 

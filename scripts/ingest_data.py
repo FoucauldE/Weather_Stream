@@ -137,6 +137,18 @@ def format_csv(csv_name="all_weather_data.csv", prediction_distance=1):
     output_file_path = os.path.join(base_directory, csv_name[:-4] + "_with_Y.csv")
     df_filtered.to_csv(output_file_path, index=False)
 
+def ingest_hist_data_streamlit(file_name):
+    get_past_data(location=None, output_csv_name=file_name)
+    format_csv(csv_name=file_name)
+
+def default_file_name():
+    train_start_date, train_end_date = define_collection_timespan()
+    # Convert date for file name
+    formatted_date_start = train_start_date.strftime("%Y-%m-%d_%H-%M-%S")
+    formatted_date_end = train_end_date.strftime("%Y-%m-%d_%H-%M-%S")    
+    file_name = f"{formatted_date_start}_{formatted_date_end}_past_data.csv"
+
+    return file_name
 
 
 if __name__ == "__main__":
