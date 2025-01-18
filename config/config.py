@@ -5,7 +5,7 @@ MAX_HISTORY_DAYS = 7
 # ARCHIVE_DIR = './archives'
 # WAIT_TIME = 10
 
-
+"""
 VARIABLES_TO_KEEP = ["lat",
                     "lon",
                     "time_epoch",
@@ -24,6 +24,18 @@ VARIABLES_TO_KEEP = ["lat",
                     "gust_kph",
                     "uv"                  
                     ]
+"""
+VARIABLES_TO_KEEP = [# "precip_mm",
+                    "cloud",
+                    "pressure_mb",
+                    "humidity",
+                    "dewpoint_c",
+                    "vis_km",
+                    "wind_kph",
+                    "temp_c",
+                    # "wind_degree", # later separated into cos and sin
+                    "lat",
+                    "lon"] # add previous target last
 
 SELECTED_FEATURES = ["cloud",
                      "pressure_mb",
