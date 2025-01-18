@@ -39,8 +39,8 @@ def plot_precip_evolution(data, save=True):
     fontsize=10,
     title_fontsize=12,
     labels=[
-        "Mean precipitation (points)",
-        "95% confidence interval (shaded area)",
+        "Mean precipitation",
+        "95% confidence interval",
         ],
     )
     plt.gca().xaxis.set_major_locator(plt.MaxNLocator(nbins=10))
