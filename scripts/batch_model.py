@@ -31,10 +31,20 @@ def plot_precip_evolution(data, save=True):
         y="prev_target",
         marker="o",
         color="blue",
+        label="Mean precipitation",
+    )
+    plt.legend(
+    title="Legend",
+    loc="upper right",
+    fontsize=10,
+    title_fontsize=12,
+    labels=[
+        "Mean precipitation (points)",
+        "95% confidence interval (shaded area)",
+        ],
     )
     plt.gca().xaxis.set_major_locator(plt.MaxNLocator(nbins=10))
     plt.xticks(rotation=45)
-    #plt.locator_params(axis='x', nbins=15)
     plt.xlabel("Time", fontsize=12)
     plt.ylabel("precipitation (mm)", fontsize=12)
     plt.grid(visible=True, linestyle='--', alpha=0.5)
