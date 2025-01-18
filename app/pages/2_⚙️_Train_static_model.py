@@ -11,14 +11,14 @@ if option == "Download data":
     st.subheader("Download data")
     default_name = default_file_name()
     file_name = st.text_input("Nom du fichier (inclure .csv) :", default_name)
-    #folder_path = st.text_input("Chemin du dossier où sauvegarder le fichier :", "")
 
     if st.button("Download"):
-            try:
-                ingest_hist_data_streamlit(default_name)
-                st.success(f"File successfully downloaded")
-            except Exception as e:
-                st.error(f"Download error : {e}")
+            with st.spinner('Downloading the data...'):
+                try:
+                    ingest_hist_data_streamlit(default_name)
+                    st.success(f"File successfully downloaded")
+                except Exception as e:
+                    st.error(f"Download error : {e}")
 
 
 elif option == "Train and test a model":
