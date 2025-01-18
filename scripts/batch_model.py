@@ -1,15 +1,12 @@
 import os
 import pandas as pd
-from sklearn.model_selection import train_test_split
+import joblib
+import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.linear_model import SGDRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.preprocessing import StandardScaler
-import joblib
 from river.compat.sklearn_to_river import convert_sklearn_to_river
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-from datetime import datetime
-import seaborn as sns
 from config.config import SELECTED_FEATURES
 
 
@@ -38,7 +35,6 @@ def plot_precip_evolution(data, save=True):
     plt.gca().xaxis.set_major_locator(plt.MaxNLocator(nbins=10))
     plt.xticks(rotation=45)
     #plt.locator_params(axis='x', nbins=15)
-    plt.title("Evolution of precip_mm", fontsize=16)
     plt.xlabel("Time", fontsize=12)
     plt.ylabel("precipitation (mm)", fontsize=12)
     plt.grid(visible=True, linestyle='--', alpha=0.5)
@@ -147,7 +143,6 @@ def features_selection(correl_matrix_plot=True, correl_with_target=True, save=Tr
         # Plot it
         plt.figure(figsize=(12, 8))
         sns.heatmap(correlation_matrix, annot=True, fmt=".2f", cmap="coolwarm", cbar=True, linewidths=0.5)
-        plt.title("Correlation matrix", fontsize=16)
         plt.xticks(rotation=45, ha='right')
         plt.yticks(rotation=0)
         plt.tight_layout()
@@ -162,6 +157,8 @@ def features_selection(correl_matrix_plot=True, correl_with_target=True, save=Tr
     if correl_with_target:
         # Absolute correlation with the target computation
         target_corr = correlation_matrix["futur_target"].apply(abs).sort_values(ascending=False)
+        # Exclude "futur_target" from the serie
+        target_corr = target_corr[target_corr.index != "futur_target"]
         # Plot the results
         plt.figure(figsize=(12, 8))
         sns.barplot(
@@ -171,9 +168,10 @@ def features_selection(correl_matrix_plot=True, correl_with_target=True, save=Tr
             palette="coolwarm",
             legend=False
         )
-        plt.title("Absolute correlation of the features with the target", fontsize=16)
         plt.xticks(rotation=45, ha='right')
         plt.ylabel("Absolute correlation", fontsize=14)
+        plt.xlabel("Features", fontsize=14)
+        plt.grid()
         plt.tight_layout()
         if save:
             output_dir = "Graphs"
