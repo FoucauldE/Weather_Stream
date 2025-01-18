@@ -13,6 +13,7 @@ st.markdown(
     1. **⛅ Consult Cloud Cover**: View real-time cloud cover data for any location on the globe. 🌍
     2. **🚨 Set Alerts**: Receive live notifications when the cloud cover is low—perfect for maximizing your solar energy production. 🚀
     3. **🔮 Access Predictions**: Explore forecasts for cloud cover in the coming hours to plan your energy strategy. 🔋
+    4. **⚙️ Create your own static model**: Download past data and train/test your own static model to predict the rain. 🌧️
 
     **Why this is useful:**
     - Stay informed about upcoming weather changes.
