@@ -8,8 +8,7 @@ import pandas as pd
 from config.config import SELECTED_FEATURES
 
 PREDICTIONS_TOPIC = 'prediction-output'
-producer_latest_pred = create_kafka_producer()
-producer_evaluated_preds = create_kafka_producer()
+producer_preds = create_kafka_producer()
 
 # Model sklearn trained
 sklearn_scaler = joblib.load("models/batch_standard_scaler.joblib")
@@ -69,7 +68,7 @@ def train_and_predict():
             metric_sklearn['mse'] = ((metric_sklearn['n'] * metric_sklearn['mse']) + error_sklearn) / (metric_sklearn['n'] + 1)
             metric_sklearn['n'] += 1
 
-            send_message_to_kafka(producer_evaluated_preds, PREDICTIONS_TOPIC, {
+            send_message_to_kafka(producer_preds, PREDICTIONS_TOPIC, {
                 'timestamp': timestamp,
                 'prediction pre trained': max(0, previous_pred_pre_trained),
                 'prediction cold start': max(0, previous_pred_cold_start),
