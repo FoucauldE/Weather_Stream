@@ -1,23 +1,23 @@
 import streamlit as st
 
-st.set_page_config(page_title="Cloud Cover", page_icon="☁️")
+st.set_page_config(page_title="Rainfall", page_icon="🌧️")
 st.title("Welcome back ! ☀️")
 
 st.markdown(
     """
-    ### Forecasting and Analysing Cloud Cover ☁️
+    ### Forecasting and Analysing Rainfall 🌧️
 
     This platform is dedicated to helping solar panel users optimize energy production by providing precise cloud cover information and forecasts.
 
     **What you can do:**
-    1. **⛅ Consult Cloud Cover**: View real-time cloud cover data for any location on the globe. 🌍
+    1. **⛅ Consult weather**: View real-time weather insights for any location on the globe. 🌍
     2. **⚙️ Train a static model**: Download past data and train/test your own static model to predict the rain. 🌧️
-    3. **🔮 Access Predictions**: Explore forecasts for cloud cover in the coming hours to plan your energy strategy. 🔋
+    3. **🔮 Access Predictions**: Explore forecasts for rainfall in the coming hour and compare the results with other models. 🔋
 
     **Why this is useful:**
     - Stay informed about upcoming weather changes.
-    - Optimize the use of solar panels to enhance energy efficiency.
-    - Receive proactive alerts for better planning and energy management.
+    - Compare performance between static and online models.
+    - Propose a complete pipeline to predict rainfall.
 
     Ready to get started? Navigate to one of the pages using the menu on the left! ✔️
     """
