@@ -1,6 +1,6 @@
 # Cloud Cover Monitoring and Forecasting
 
-This repository provides a real-time monitoring system for Cloud Cover in order to help solar panel users optimize energy production. It uses data from the [Weather API](https://www.weatherapi.com/) and can be easily used through a Streamlit interface.
+This repository provides a real-time monitoring system for Rainfall in order to compare performance between different ML models, especially between static and online approches. It uses data from the [Weather API](https://www.weatherapi.com/) and can be easily used through a Streamlit interface.
 
 ## Steps to Get Started
 
@@ -36,9 +36,8 @@ Note: Windows users might need to set the Python Path
 
 ## Usage
 
-Once you launched the streamlit app, feel free to discover our features to help you optimize your energy production:
+Once you launched the streamlit app, feel free to discover our features to help you predict rainfall in the coming hour:
 **What you can do:**
-1. **⛅ Consult Cloud Cover**: View real-time cloud cover data for any location on the globe. 🌍
-2. **🚨 Set Alerts**: Receive live notifications when the cloud cover is low—perfect for maximizing your solar energy production. 🚀
-3. **🔮 Access Predictions**: Explore forecasts for cloud cover in the coming hours to plan your energy strategy. 🔋
-4. **⚙️ Create your own static model**: Download past data and train/test your own static model to predict the rain. 🌧️
+1. **⛅ Consult weather**: View real-time weather insights for any location on the globe. 🌍
+2. **⚙️ Train a static model**: Download past data and train/test your own static model to predict the rain. 🌧️
+3. **🔮 Access Predictions**: Explore forecasts for rainfall in the coming hour and compare the results with other models. 🔋

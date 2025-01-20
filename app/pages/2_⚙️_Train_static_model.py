@@ -23,7 +23,7 @@ if option == "Download data":
 
 elif option == "Train and test a model":
     st.subheader("Train and test a model")
-    default_file = "Data/DEFINITIVE_2025-01-10_00-00-00_2025-01-17_00-00-00_past_data_with_Y.csv"
+    default_file = "Data/DEFINITIVE_2025-01-10_2025-01-17_past_data_with_Y.csv"
     uploaded_file = st.file_uploader("Upload a CSV file for training (if nothing, use the default file):", type=["csv"])
 
     if uploaded_file:
