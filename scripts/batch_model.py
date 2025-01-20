@@ -200,8 +200,6 @@ def train_test_model(csv_name, save):
     data = load_and_prepare_csv(csv_name)
     # Plot the evolution of the target
     plot_precip_evolution(data, save=save)
-    # Plot graphs for feature selection
-    features_selection(save=save)
     # Temporal train/test split
     X_train, X_test, y_train, y_test = temporal_train_test_split(data, verbose=True, split_coef=0.8)
     # Define the pipeline, fit and print several scores
@@ -212,7 +210,7 @@ if __name__ == "__main__":
 
     print("Training the batch model on past data...")
     # Define the file name
-    csv_name = 'Data/DEFINITIVE_2025-01-10_00-00-00_2025-01-17_00-00-00_past_data_with_Y.csv'
+    csv_name = 'Data/DEFINITIVE_2025-01-10_2025-01-17_past_data_with_Y.csv'
     #Load the data
     data = load_and_prepare_csv(csv_name)
     # Plot the evolution of the target
