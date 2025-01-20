@@ -7,7 +7,7 @@ st.markdown(
     """
     ### Forecasting and Analysing Rainfall 🌧️
 
-    This platform is dedicated to helping solar panel users optimize energy production by providing precise cloud cover information and forecasts.
+    This platform is dedicated to providing precise rainfall information and forecasts.
 
     **What you can do:**
     1. **⛅ Consult weather**: View real-time weather insights for any location on the globe. 🌍
