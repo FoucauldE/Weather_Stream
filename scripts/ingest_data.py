@@ -1,18 +1,19 @@
 import time
 import csv
 import os
+import pytz
 import pandas as pd
 from datetime import datetime, timedelta
 from helper.kafka_utils import create_kafka_producer, send_message_to_kafka
-from helper.weather_api import get_current_weather, get_forecast_weather, get_historical_weather
+from helper.weather_api import get_current_weather, get_forecast_weather, get_historical_weather, get_timezone_id
 from helper.tools import preprocess_data
 from config.config import CITIES_LIST, DATA_DIR, MAX_HISTORY_DAYS
 
 OUTPUT_TOPIC = 'weather-data'
 
-producer = create_kafka_producer()
+default_producer = create_kafka_producer()
 
-def fetch_and_send_current_weather(location, output_topic, to_preprocess=False):
+def fetch_and_send_current_weather(location, output_topic, producer=default_producer, to_preprocess=False):
     current_weather = get_current_weather(location)
     if current_weather:
         message = {'type': 'current', 'data': current_weather}
@@ -26,7 +27,7 @@ def fetch_and_send_current_weather(location, output_topic, to_preprocess=False):
 def fetch_and_send_forecast_weather(location, forecast_days):
     forecast_weather = get_forecast_weather(location, days=forecast_days)
     if forecast_weather:
-        send_message_to_kafka(producer, OUTPUT_TOPIC, {'type': 'forecast', 'data': forecast_weather})
+        send_message_to_kafka(default_producer, OUTPUT_TOPIC, {'type': 'forecast', 'data': forecast_weather})
         return forecast_weather
     return None
 
@@ -34,7 +35,7 @@ def fetch_and_send_forecast_weather(location, forecast_days):
 def fetch_and_send_historical_weather(location, date, hour=None):
     historical_weather = get_historical_weather(location, date=date, hour=hour)
     if historical_weather:
-        send_message_to_kafka(producer, OUTPUT_TOPIC, {'type': 'historical', 'data': historical_weather})
+        send_message_to_kafka(default_producer, OUTPUT_TOPIC, {'type': 'historical', 'data': historical_weather})
         return historical_weather
     return None
 
@@ -44,16 +45,17 @@ def start_ingesting_live_data(location):
         fetch_and_send_current_weather(location, 'weather-live-data-2', to_preprocess=True)
         time.sleep(60)
 
-def define_collection_timespan():
+def define_collection_timespan(location=None):
+    """Define the timespan for data collection, adjusted to the timezone of the specified location."""
 
-    current_date = datetime.now()
+    if location is None:
+        location = CITIES_LIST[0]
+    local_timezone = pytz.timezone(get_timezone_id(location))
+    
+    current_date = datetime.now(local_timezone)
     beginning_date = current_date - timedelta(days=MAX_HISTORY_DAYS)
-    train_start_date = beginning_date.strftime("%Y-%m-%d")
-    train_end_date = current_date.strftime("%Y-%m-%d")
-    train_start_date = datetime.strptime(train_start_date, "%Y-%m-%d")
-    train_end_date = datetime.strptime(train_end_date, "%Y-%m-%d")
-
-    return train_start_date, train_end_date
+    
+    return beginning_date, current_date
 
 
 def get_past_data(location=None, output_csv_name=None):
@@ -63,9 +65,10 @@ def get_past_data(location=None, output_csv_name=None):
     """
 
     headers = None
-    producer = None
-    start_date, end_date = define_collection_timespan()
+    live_producer = None
+    start_date, end_date = define_collection_timespan(location)
     date = start_date
+    stop_before = end_date.hour
 
     if output_csv_name:
         os.makedirs(DATA_DIR, exist_ok=True)
@@ -73,21 +76,25 @@ def get_past_data(location=None, output_csv_name=None):
         csvfile = open(output_csv_path, mode="w", newline="", encoding="utf-8")
         writer = None
     else:
-        producer = create_kafka_producer()
+        live_producer = create_kafka_producer()
         
     while date <= end_date:
         for city in (CITIES_LIST if location is None else [location]):
             raw_data = get_historical_weather(location=city, date=date)
             processed_data = preprocess_data(raw_data)
 
-            for hourly_data in processed_data:
+            for hour, hourly_data in enumerate(processed_data):
+
+                # if it's the last day, stop before current hour
+                if date.date() == end_date.date() and hour >= stop_before:
+                    break
+
                 row = {
                     "last_updated": hourly_data["last_updated"],
                     "target": hourly_data["target"]
                 }
 
                 if output_csv_name:
-                    row.update(hourly_data["processed_sample"])
                     row.update(hourly_data["processed_sample"])
                     if headers is None:
                         headers = list(row.keys())
@@ -97,9 +104,7 @@ def get_past_data(location=None, output_csv_name=None):
 
                 else:
                     row["processed_sample"] = hourly_data["processed_sample"]
-                    row["processed_sample"] = hourly_data["processed_sample"]
-                    # send_message_to_kafka(producer, 'data-previous-week', row)
-                    send_message_to_kafka(producer, 'weather-live-data-2', row)
+                    send_message_to_kafka(live_producer, 'weather-live-data-2', row)
 
         date += timedelta(days=1)
 

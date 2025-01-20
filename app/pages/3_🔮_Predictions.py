@@ -1,29 +1,32 @@
 import threading
 import streamlit as st
 import pandas as pd
+import pytz
 from datetime import datetime
 from scripts.ingest_data import get_past_data
 from scripts.online_model import train_and_predict
 from helper.kafka_utils import create_kafka_consumer, create_kafka_producer
+from helper.weather_api import get_timezone_id
 
 PREDICTIONS_TOPIC = 'prediction-output'
+st.set_page_config(page_title="Predictions", page_icon="☔")
 st.title("🔮 Predictions 🌧️")
 
-location = st.text_input("Enter City Name or Zip Code", "Biarritz")
+location = st.text_input("Enter City Name or Zip Code", "Montreal")
 start_button = st.button("Start Predicting")
 
 data = pd.DataFrame()
 graph_container = st.empty()
 metrics_container = st.empty()
 
-def display_predictions():
+def display_predictions(timezone):
 
     consumer = create_kafka_consumer(PREDICTIONS_TOPIC, 'preds-group')
 
     try:
         for message in consumer:
             new_data = pd.DataFrame([message.value])
-            new_data['timestamp'] = new_data['timestamp'].apply(lambda ts: datetime.fromtimestamp(ts))
+            new_data['timestamp'] = new_data['timestamp'].apply(lambda ts: datetime.fromtimestamp(ts, tz=timezone))
 
             if not new_data.empty:
                 global data
@@ -74,4 +77,6 @@ if start_button:
     predictions_thread = threading.Thread(target=train_and_predict, daemon=True)
     predictions_thread.start()
 
-    display_predictions()
+    local_timezone = pytz.timezone(get_timezone_id(location))
+
+    display_predictions(local_timezone)

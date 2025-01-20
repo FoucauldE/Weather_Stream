@@ -59,3 +59,23 @@ def get_historical_weather(location, date, hour=None):
     if data:
         return data_weather
     return None
+
+
+def get_timezone_id(location_name):
+    """
+    Fetch the timezone ID (tz_id) for a given location using the WeatherAPI.
+    Used to collect past data
+    """
+    try:
+        params = {'q': location_name}
+        data = get_weather_data('current', params)
+        
+        if data and 'location' in data:
+            tz_id = data['location'].get('tz_id')
+            return tz_id
+        else:
+            print("Error: 'location' data not found in the response.")
+            return None
+    except Exception as e:
+        print(f"Error fetching timezone ID: {str(e)}")
+        return None
