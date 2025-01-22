@@ -15,13 +15,13 @@ st.title("🔮 Predictions 🌧️")
 location = st.text_input("Enter City Name or Zip Code", "Montreal")
 start_button = st.button("Start Predicting")
 
-data = pd.DataFrame()
 graph_container = st.empty()
 metrics_container = st.empty()
 
 def display_predictions(timezone):
 
     consumer = create_kafka_consumer(PREDICTIONS_TOPIC, 'preds-group')
+    data = pd.DataFrame()
 
     try:
         for message in consumer:
@@ -29,7 +29,6 @@ def display_predictions(timezone):
             new_data['timestamp'] = new_data['timestamp'].apply(lambda ts: datetime.fromtimestamp(ts, tz=timezone))
 
             if not new_data.empty:
-                global data
                 data = pd.concat([data, new_data]).drop_duplicates().sort_index()
 
                 with metrics_container.container():
