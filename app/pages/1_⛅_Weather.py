@@ -1,4 +1,6 @@
 import streamlit as st
+from datetime import datetime, timedelta
+from config.config import MAX_HISTORY_DAYS
 from scripts.ingest_data import (
     fetch_and_send_current_weather,
     fetch_and_send_forecast_weather,
@@ -20,7 +22,7 @@ else:
     forecast_hours = None
 
 if weather_type == "historical":
-    date = st.date_input("Select Date for Historical Weather")
+    date = st.date_input("Select Date for Historical Weather", min_value=datetime.now() - timedelta(days=MAX_HISTORY_DAYS))
     hour = st.number_input("Enter Hour (24-hour format)", min_value=0, max_value=23, step=1)
 else:
     date, hour = None, None
